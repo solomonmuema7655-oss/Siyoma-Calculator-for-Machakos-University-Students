@@ -19,6 +19,44 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Extract V2 project if ZIP was uploaded
+        run: |
+          ZIP_FILE=$(find . -maxdepth 1 -type f -name "*.zip" | head -n 1)
+
+          if [ -n "$ZIP_FILE" ]; then
+            echo "Found ZIP: $ZIP_FILE"
+            mkdir -p extracted
+            unzip -o "$ZIP_FILE" -d extracted
+
+            PROJECT_DIR=$(find extracted -name "buildozer.spec" -type f -printf '%h\n' | head -n 1)
+
+            if [ -z "$PROJECT_DIR" ]; then
+              echo "ERROR: buildozer.spec was not found inside the ZIP."
+              find extracted -maxdepth 4 -type f -print
+              exit 1
+            fi
+
+            echo "Project directory: $PROJECT_DIR"
+
+            cp -r "$PROJECT_DIR"/. ./
+          fi
+
+      - name: Verify project files
+        run: |
+          echo "Current directory:"
+          pwd
+
+          echo "Project files:"
+          ls -la
+
+          echo "Checking buildozer.spec..."
+          test -f buildozer.spec
+
+          echo "Checking main.py..."
+          test -f main.py
+
+          echo "V2 project files are ready."
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -62,6 +100,7 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p artifacts
+
           APK_FILE=$(find bin -type f -name "*.apk" | head -n 1)
 
           if [ -z "$APK_FILE" ]; then
