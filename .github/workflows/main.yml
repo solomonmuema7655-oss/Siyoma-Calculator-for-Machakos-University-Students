@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout project
@@ -34,7 +34,6 @@ jobs:
             zlib1g-dev \
             libncurses5-dev \
             libncursesw5-dev \
-            libtinfo5 \
             cmake \
             libffi-dev \
             libssl-dev
@@ -51,9 +50,14 @@ jobs:
           rm -rf bin
           mkdir -p bin
 
-      - name: Build V2 APK
+      - name: Build SIYOMA Calculator V2
         run: |
           buildozer android debug
+
+      - name: Find generated APK
+        run: |
+          echo "Checking for generated APK..."
+          find bin -type f -name "*.apk" -print
 
       - name: Prepare APK artifact
         run: |
@@ -61,9 +65,7 @@ jobs:
           APK_FILE=$(find bin -type f -name "*.apk" | head -n 1)
 
           if [ -z "$APK_FILE" ]; then
-            echo "ERROR: No APK was generated."
-            echo "Contents of bin directory:"
-            ls -la bin || true
+            echo "ERROR: APK was not generated."
             exit 1
           fi
 
